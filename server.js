@@ -3,6 +3,7 @@ const { storage } = require('./storage/storage');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const socketIOMiddleware = require('./middlewares/socketIOMiddleware');
+const auth = require('./middlewares/authMiddleware');
 
 const app = express();
 const port = 8080;
@@ -26,11 +27,13 @@ const server = socketIOMiddleware(app);
 const characterRoute = require('./routes/characterRoute');
 const knowledgeRoute = require('./routes/knowledgeRoute');
 const folderRoute = require('./routes/folderRoute');
+const userRoute = require('./routes/userRoute');
 
-//routes
+//routes add auth middleware
 app.use('/character', characterRoute);
-app.use('/knowledge', knowledgeRoute);
-app.use('/folder', folderRoute);
+app.use('/knowledge', auth, knowledgeRoute);
+app.use('/folder', auth,folderRoute);
+app.use('/user', userRoute);
 
 
 app.post('/upload', upload.single('image'), (req, res) => {
