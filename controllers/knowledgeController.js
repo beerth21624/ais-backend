@@ -101,6 +101,21 @@ const createQaKnowledge = async (req, res) => {
     }
 }
 
+const updateQaKnowledge = async (req, res) => {
+    const { folder_id, qa_id } = req.params;
+    const { question, answer, record_status } = req.body;
+    try {
+        const folder = await FolderSchema.findById(folder_id);
+        const updatedFolder = { qa_knowledge: folder.qa_knowledge.map(qa => qa._id == qa_id ? { _id: qa_id, question, answer, record_status } : qa) };
+        await FolderSchema.findByIdAndUpdate(folder_id, updatedFolder, { new: true });
+        res.status(200).json(updatedFolder);
+    }
+    catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
+
+
 const deleteQaKnowledge = async (req, res) => {
     const { folder_id, qa_id } = req.params;
     try {
@@ -147,6 +162,20 @@ const createImageKnowledge = async (req, res) => {
 
 }
 
+const updateImageKnowledge = async (req, res) => {
+    const { folder_id, image_id } = req.params;
+    const { description, record_status } = req.body;
+    try {
+        const folder = await FolderSchema.findById(folder_id);
+        const updatedFolder = { image_knowledge: folder.image_knowledge.map(image => image._id == image_id ? { _id: image_id, description: description, record_status: record_status , image_name:image.image_name , image_url:image.image_url  } : image) };
+        await FolderSchema.findByIdAndUpdate(folder_id, updatedFolder, { new: true });
+        res.status(200).json(updatedFolder);
+    }
+    catch (error) {
+        res.status(409).json({ message: error.message });
+    }
+}
+
 const deleteImageKnowledge = async (req, res) => {
     const { folder_id, image_id } = req.params;
     try {
@@ -173,7 +202,9 @@ module.exports = {
     deleteKnowledge,
     createQaKnowledge,
     createImageKnowledge,
+    updateQaKnowledge,
     deleteQaKnowledge,
+    updateImageKnowledge,
     deleteImageKnowledge
     
 }
