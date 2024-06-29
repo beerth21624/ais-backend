@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 cloudinary.config({
-    cloud_name:process.env.CLOUD_NAME,
+    cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUDINARY_KEY,
     api_secret: process.env.CLOUDINARY_SECRET
 });
@@ -14,18 +14,19 @@ const storage = new CloudinaryStorage({
     params: {
         folder: 'CloudinaryDemo',
         allowedFormats: ['jpeg', 'png', 'jpg'],
+        transformation: [
+            { width: 800, height: 600, crop: 'limit' }, 
+            { quality: 'auto:low' }, 
+            { fetch_format: 'auto' }
+        ]
     }
 });
 
-//remove image from cloudinary
 function CloudinayRemoveImage(image_name) {
     cloudinary.uploader.destroy(image_name, function (error, result) {
         console.log(result, error);
-    }
-    );
+    });
 }
-
-
 
 module.exports = {
     storage,

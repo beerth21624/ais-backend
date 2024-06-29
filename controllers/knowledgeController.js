@@ -151,7 +151,6 @@ const deleteImageKnowledge = async (req, res) => {
     const { folder_id, image_id } = req.params;
     try {
         const folder = await FolderSchema.findById(folder_id);
-        console.log(folder.image_knowledge.find(image => image._id == image_id).image_name)
         CloudinayRemoveImage(folder.image_knowledge.find(image => image._id == image_id).image_name);
         const updatedFolder = { image_knowledge: folder.image_knowledge.filter(image => image._id != image_id) };
         await FolderSchema.findByIdAndUpdate(folder_id, updatedFolder, { new: true });

@@ -18,11 +18,7 @@ const generationConfig = {
     responseMimeType: "text/plain",
 };
 
-const imageMap = {
-    'เปิดแอปไลน์': 'https://res.cloudinary.com/ds75c8pcd/image/upload/v1719402602/CloudinaryDemo/y03nnm57marrf9fh5tnu.jpg',
-    'กดที่ปุ่มเพิ่มเพื่อน': 'https://i.ibb.co/LdW1r5v/IMG-9409.png',
-    'เพิ่มจาก ID': 'https://i.ibb.co/PgrVskB/IMG-9411.png',
-};
+let imageMap = {};
 
 function findMostSimilarImage(text) {
     let maxSimilarity = 0;
@@ -49,10 +45,22 @@ const handleImageKnowledge=async(folders)=> {
     const generalKnowledgeArr = folders.map(folder => folder.general_knowledge);
    const generalText =  generateSystemInstructionByGeneralKnowledge(generalKnowledgeArr);
    const generalQa =  generateSystemInstructionByQaKnowledge(tempArr);
-    const imageKnowledge = folders.map(folder => folder.image_knowledge);
 
 const sumText=generalText+generalQa;
     return sumText
+}
+function convertToImageMap(imageKnowledge) {
+    const imageMap = {};
+
+    imageKnowledge.forEach(group => {
+        group.forEach(item => {
+            if (item.description && item.image_url) {
+                imageMap[item.description] = item.image_url;
+            }
+        });
+    });
+
+    return imageMap;
 }
 
 
@@ -87,6 +95,8 @@ function socketIOMiddleware(app) {
                 const character = await CharacterSchema.findById(characterId);
                 const folderKnowledge = character.folder_knowledge;
                 const folders = await FolderSchema.find({ _id: { $in: folderKnowledge } });
+                const imageKnowledge = folders.map(folder => folder.image_knowledge);
+                 imageMap = convertToImageMap(imageKnowledge);
                 const instructionKnowledgeText = await handleImageKnowledge(folders);
                 if (!character) {
                     return socket.emit('error', 'CharacterSchema not found');

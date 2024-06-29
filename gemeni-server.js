@@ -70,7 +70,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('message', async (message) => {
-        console.log('Message:', message);
         try {
             const result = await chatSession.sendMessage(message);
             let response = result.response.text();

@@ -12,6 +12,7 @@ const createCharacter = async (req, res) => {
             console.log(err);
             return res.status(500).send(err.message);
         }
+
         const { name, description, prompt, record_status='A' } = req.body;
         const image_name = req.file.filename;
         const image_url = req.file.path;
@@ -75,7 +76,6 @@ const deleteCharacter = async (req, res) => {
     try {
         const character = await Character
             .findById(id);
-            console.log("character", character);
         CloudinayRemoveImage(character.image_name);
         await Character.deleteOne({ _id: id });
 
