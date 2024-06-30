@@ -93,7 +93,7 @@ class AiController {
             const instructionKnowledgeText = KnowledgeProcessor.generateInstructions(folders);
             let systemPrompt = character.prompt + instructionKnowledgeText;
             if (Object.keys(imageManager.imageMap).length > 0) {
-                systemPrompt += 'แต่ละข้อความที่มีรูปภาพ คุณจะระบุว่า [รูปภาพ:..ชื่อรูปภาพ]';
+                systemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ';
             }
 
             // Generate response
@@ -106,11 +106,14 @@ class AiController {
             const result = await chatSession.sendMessage(message);
             let response = result.response.text();
 
-            // Process image references
-            response = response.replace(/\[รูปภาพ:([^\]]+)\]/g, (match, description) => {
-                const mostSimilarKey = imageManager.findMostSimilarImage(description);
-                return mostSimilarKey ? `![${description}](${imageManager.imageMap[mostSimilarKey]})` : '';
-            });
+            // // Process image references
+            // response = response.replace(/\[รูปภาพ:([^\]]+)\]/g, (match, description) => {
+            //     const mostSimilarKey = imageManager.findMostSimilarImage(description);
+            //     return mostSimilarKey ? `![${description}](${imageManager.imageMap[mostSimilarKey]})` : '';
+            // });
+
+            response = AiController.removeMarkdown(response);
+
 
             res.json({ classification, response });
         } catch (error) {
@@ -133,6 +136,21 @@ class AiController {
 
         const result = await chatSession.sendMessage(message);
         return result.response.text().trim();
+    }
+
+    static removeMarkdown(text) {
+        text = text.replace(/#{1,6}\s?/g, '');
+        text = text.replace(/[*_]{1,3}(.*?)[*_]{1,3}/g, '$1');
+        text = text.replace(/`(.+?)`/g, '$1');
+        text = text.replace(/```[\s\S]*?```/g, '');
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+        text = text.replace(/!\[([^\]]+)\]\(([^)]+)\)/g, 'รูปภาพ: $1');
+        text = text.replace(/^\s*>\s*/gm, '');
+        text = text.replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '');
+        text = text.replace(/^[\s*-+]+/gm, '');
+        text = text.trim();
+
+        return text;
     }
 }
 
