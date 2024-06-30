@@ -76,6 +76,7 @@ function generateSystemInstructionByQaKnowledge(qaKnowledge) {
     return textInstruction;
 }
 
+
 // Middleware function for socket.io
 function socketIOMiddleware(app) {
     const server = http.createServer(app);
@@ -106,7 +107,12 @@ function socketIOMiddleware(app) {
 
                 const instructionKnowledgeText = await handleImageKnowledge(folders);
 
-                const systemPrompt = character.prompt + instructionKnowledgeText;
+                let systemPrompt = character.prompt + instructionKnowledgeText
+                if(imageMap.length > 0){
+                    systemPrompt += 'แต่ละข้อความที่มีรูปภาพ คุณจะระบุว่า [รูปภาพ:..ชื่อรูปภาพ]';
+                }
+                
+
                 const model = genAI.getGenerativeModel({
                     model: "gemini-1.5-flash",
                     systemInstruction: systemPrompt,
@@ -123,7 +129,6 @@ function socketIOMiddleware(app) {
                         const result = await chatSession.sendMessage(message);
                         let response = result.response.text();
 
-                        // Replace placeholders with actual images
                         const imageRegex = /\[รูปภาพ:([^\]]+)\]/g;
                         response = response.replace(imageRegex, (match, description) => {
                             const mostSimilarKey = findMostSimilarImage(description);
