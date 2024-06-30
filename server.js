@@ -29,6 +29,7 @@ const knowledgeRoute = require('./routes/knowledgeRoute');
 const folderRoute = require('./routes/folderRoute');
 const userRoute = require('./routes/userRoute');
 const newsRoute = require('./routes/newsRoute');
+const aiRoute = require('./routes/aiRoute');    
 
 //routes add auth middleware
 app.use('/character', characterRoute);
@@ -36,7 +37,7 @@ app.use('/knowledge', auth, knowledgeRoute);
 app.use('/folder', auth,folderRoute);
 app.use('/user', userRoute);
 app.use('/news', newsRoute);
-
+app.use('/ai', aiRoute);
 
 app.post('/upload', upload.single('image'), (req, res) => {
     res.send('Done');
