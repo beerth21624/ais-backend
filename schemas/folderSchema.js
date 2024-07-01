@@ -12,6 +12,9 @@ const folderSchema = new mongoose.Schema({
     general_knowledge: {
         type:String,
     },
+    link_knowledge: {
+        type: Array,
+    },
     image_knowledge: {
         type: Array,
     },
