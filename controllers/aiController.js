@@ -52,9 +52,10 @@ class KnowledgeProcessor {
     static generateInstructions(folders) {
         const qaKnowledge = folders.flatMap(folder => folder.qa_knowledge);
         const generalKnowledge = folders.map(folder => folder.general_knowledge);
+        const link_knowledge = folders.map(folder => folder.link_knowledge);
 
         return this.generateGeneralKnowledgeInstructions(generalKnowledge) +
-            this.generateQaKnowledgeInstructions(qaKnowledge);
+            this.generateQaKnowledgeInstructions(qaKnowledge) + this.generateLinkKnowledgeInstructions(link_knowledge);
     }
 
     static generateGeneralKnowledgeInstructions(knowledgeArr) {
@@ -65,6 +66,13 @@ class KnowledgeProcessor {
         return 'และคุณมีความรู้ในคำถามและคำตอบดังนี้\n' +
             qaKnowledge.map(k => `คำถาม: ${k.question}\n คำตอบ: ${k.answer}`).join('\n');
     }
+
+    static generateLinkKnowledgeInstructions(link_knowledge) {
+        return 'และคุณมีความรู้จากที่จะเป็นประโยชน์ในการเรียนรู้เพิ่มเติม\n' + link_knowledge.map(k => `เรื่อง: ${k.name ==='Link' ? 'ไม่มีชื่อ' : k.name}\n ลิ้งค์: ${k.link ==='Link' ? 'ไม่มีลิ้งค์' : k.link}`).join('\n') + 'คุณจะสามารถนำไปใช้ในการตอบคำถามของผู้ใช้ได้';
+    }
+
+
+
 }
 
 class AiController {
@@ -72,16 +80,9 @@ class AiController {
         try {
             const { message } = req.body;
 
-            console.log('Received message:', message);
 
-            // Classify the message
             const classification = await AiController.classifyMessage(message);
 
-            console.log('Classification:', classification)
-
-        
-
-            // Fetch the appropriate character based on classification
             const character = await CharacterSchema.findOne({
                 name: { $regex: new RegExp(classification, 'i') }
             });
@@ -90,7 +91,6 @@ class AiController {
                 return res.status(404).json({ error: 'Character not found' });
             }
 
-            // Fetch folders and process knowledge
             const folders = await FolderSchema.find({ _id: { $in: character.folder_knowledge } });
             const imageManager = new ImageKnowledgeManager();
             const imageKnowledge = folders.map(folder => folder.image_knowledge);
@@ -99,10 +99,9 @@ class AiController {
             const instructionKnowledgeText = KnowledgeProcessor.generateInstructions(folders);
             let systemPrompt = character.prompt + instructionKnowledgeText;
             if (Object.keys(imageManager.imageMap).length > 0) {
-                systemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ';
+                systemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ คุณจะมีนิสัยขอบเป็นห่วงและมักถามกลับเพื่อความแน่ใ0 ข้อความที่ตอบกลับจะถูกนำไปใช้กับ line chatbot โดยตรง';
             }
 
-            // Generate response
             const model = genAI.getGenerativeModel({
                 model: GEMINI_MODEL,
                 systemInstruction: systemPrompt,
@@ -130,12 +129,12 @@ class AiController {
 
 
     static async classifyMessage(message) {
-        const classifierInstruction = `คุณเป็น AI ที่เชี่ยวชาญในการวิเคราะห์และจำแนกประเภทของข้อความ โดยเฉพาะอย่างยิ่งในการระบุว่าข้อความนั้นเกี่ยวข้องกับประเภทใดใน 4 ประเภทต่อไปนี้:
-        Agent Application: ข้อความที่เกี่ยวกับการสอนหรืออธิบายวิธีการใช้งานแอพพลิเคชันต่างๆ
-        Agent Protect: ข้อความที่เกี่ยวกับความปลอดภัยทางออนไลน์ การตรวจสอบความน่าเชื่อถือของข้อมูล หรือการป้องกันภัยคุกคามทางไซเบอร์
-        Agent News: ข้อความที่เกี่ยวกับการนำเสนอหรือสรุปข่าวสารที่น่าสนใจ
-        Agent Travel: ข้อความที่เกี่ยวกับการแนะนำสถานที่ท่องเที่ยว การวางแผนการเดินทาง หรือข้อมูลเกี่ยวกับการท่องเที่ยว
-        เมื่อได้รับข้อความใดๆ คุณจะวิเคราะห์เนื้อหาและตอบกลับด้วยชื่อประเภทที่เหมาะสมที่สุดเพียงอย่างเดียว โดยไม่มีข้อความอื่นใดเพิ่มเติม ข้อควรระวัง: หากข้อความนั้นเกี่ยวข้องกับการแพทย์ที่มีความเสี่ยงและอันตราย ฉันจะไม่ให้คำแนะนำใด ๆ และจะไม่ตอบกลับข้อความนั้น ๆ`;
+        const characters = await CharacterSchema.find({
+            record_status: 'A'
+        });
+        const classifierInstruction = `คุณเป็น AI ที่เชี่ยวชาญในการวิเคราะห์และจำแนกประเภทของข้อความ โดยเฉพาะอย่างยิ่งในการระบุว่าข้อความนั้นเกี่ยวข้องกับประเภทใดใน ${characters.length} ประเภทต่อไปนี้:
+    ${characters.map(char => `${char.name}: ${char.prompt}`).join('\n')}
+    เมื่อได้รับข้อความใดๆ คุณจะวิเคราะห์เนื้อหาและตอบกลับด้วยชื่อประเภทที่เหมาะสมที่สุดเพียงอย่างเดียว โดยไม่มีข้อความอื่นใดเพิ่มเติม ข้อควรระวัง: หากข้อความนั้นเกี่ยวข้องกับการแพทย์ที่มีความเสี่ยงและอันตราย ฉันจะไม่ให้คำแนะนำใด ๆ และจะไม่ตอบกลับข้อความนั้น ๆ`;
 
         const model = genAI.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: classifierInstruction });
         const chatSession = model.startChat({ generationConfig: GENERATION_CONFIG, history: [] });
