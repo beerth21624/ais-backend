@@ -129,7 +129,7 @@ class AiController {
                     const instructionKnowledgeText = KnowledgeProcessor.generateInstructions(folders);
                     let preSystemPrompt = character.prompt + instructionKnowledgeText;
                     if (Object.keys(imageManager.imageMap).length > 0) {
-                        preSystemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ คุณจะมีนิสัยขอบเป็นห่วงและมักถามกลับเพื่อความแน่ใ0 ข้อความที่ตอบกลับจะถูกนำไปใช้กับ line chatbot โดยตรง';
+                        preSystemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ คุณจะมีนิสัยขอบเป็นห่วงและมักถามกลับเพื่อความแน่ใจ ข้อความที่ตอบกลับจะถูกนำไปใช้กับ line chatbot โดยตรง และสุดท้ายคุณจะแทนตัวเองว่าหลานเสมอ';
                     }
                     systemPrompt = preSystemPrompt;
                     // Cache system prompt for 1 day

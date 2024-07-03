@@ -3,6 +3,7 @@ const { storage } = require('./storage/storage');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const socketIOMiddleware = require('./middlewares/socketIOMiddleware');
+const socketIOChatMiddleware = require('./middlewares/socketIOChatMiddleware');
 const auth = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -22,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const server = socketIOMiddleware(app);
+const server = socketIOChatMiddleware(app);
 
 app.get('/', (req, res) => {
     res.send('Hello World');

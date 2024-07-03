@@ -6,21 +6,24 @@ const socketIO = require('socket.io');
 
 function socketIOChatMiddleware(app) {
     const server = http.createServer(app);
-    const io = socketIO(server);
+    const io = socketIO(server, {
+        cors: { origin: "*" } // Consider restricting this for security reasons
+    });
+
 
     io.on('connection', (socket) => {
         console.log('A user connected');
 
-        socket.on('chat message', async (msg) => {
+        socket.on('message', async (msg) => {
             try {
                 const result = await AiController.processMessage({ body: { message: msg } }, {
                     json: (data) => {
-                        io.emit('chat message', data);
+                        io.emit('message', data);
                     }
                 });
             } catch (error) {
                 console.error('Error processing message:', error);
-                io.emit('chat message', { error: 'An error occurred while processing the message' });
+                io.emit('message', { error: 'An error occurred while processing the message' });
             }
         });
 
