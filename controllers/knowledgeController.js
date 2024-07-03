@@ -340,8 +340,6 @@ const trainingLinkKnowledge = async (req, res) => {
     if (!link) return res.status(404).json({ message: "Link not found" });
     const content = await scrapeWebsite(link.url);
     const { headings, paragraphs, links } = content;
-    console.log('headings', headings)
-
     const sumParagraphs = paragraphs.join(" ");
 
     const updatedFolder = {
