@@ -119,8 +119,18 @@ class AiController {
 
             response = AiController.removeMarkdown(response);
 
+                const recommendationModel = genAI.getGenerativeModel({
+                    model: GEMINI_MODEL,
+                    systemInstruction:'คุณเป็นผู้ช่วยในการสนทนา หลังจากอ่านข้อความบทสนทนาที่ user ส่งมา กรุณาแนะนำ 5 ประโยคที่ user สามารถใช้ตอบกลับได้อย่างเหมาะสม เพื่อให้การสนทนาดำเนินต่อไปอย่างราบรื่นและน่าสนใจ คำนึงถึงบริบท อารมณ์ และจุดประสงค์ของการสนทนา นำเสนอประโยคที่หลากหลายและเป็นธรรมชาติ แยกแต่ละประโยคด้วยเครื่องหมายจุลภาค (,)'
+                });
+                const recommendationChatSession = recommendationModel.startChat({ generationConfig: GENERATION_CONFIG, history: [] });
+                const previosMessage = `user : ${message} \n AI : ${response} `
+            const recommendationResult = await recommendationChatSession.sendMessage(previosMessage);
+                const recommendationResponse = recommendationResult.response.text();
+                
+                
 
-            res.json({ classification, response });
+            res.json({ classification, response, recommendationResponse});
         } catch (error) {
             console.error('Error processing message:', error);
             res.status(500).json({ error: 'An error occurred while processing the message' });
