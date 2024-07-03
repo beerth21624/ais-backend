@@ -26,6 +26,7 @@
     "natural": "^7.0.6",
     "openai": "^4.51.0",
     "readline-sync": "^1.4.10",
+    "redis": "^4.6.15",
     "socket.io": "^4.7.5"
   }
 }

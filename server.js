@@ -3,7 +3,6 @@ const { storage } = require('./storage/storage');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const socketIOMiddleware = require('./middlewares/socketIOMiddleware');
-const { chatIoMiddleware } = require('./middlewares/agentChatMiddleware');
 const auth = require('./middlewares/authMiddleware');
 
 const app = express();
