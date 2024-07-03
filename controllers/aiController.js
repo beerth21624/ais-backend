@@ -82,14 +82,13 @@ class AiController {
 
 
             const classification = await AiController.classifyMessage(message);
-
             const character = await CharacterSchema.findOne({
-                name: { $regex: new RegExp(classification, 'i') }
+                name: classification
             });
 
-            if (!character) {
-                return res.status(404).json({ error: 'Character not found' });
-            }
+            let systemPrompt = '';
+            if (character) {
+            
 
             const folders = await FolderSchema.find({ _id: { $in: character.folder_knowledge } });
             const imageManager = new ImageKnowledgeManager();
@@ -97,10 +96,15 @@ class AiController {
             imageManager.addImages(imageKnowledge);
 
             const instructionKnowledgeText = KnowledgeProcessor.generateInstructions(folders);
-            let systemPrompt = character.prompt + instructionKnowledgeText;
+            let preSystemPrompt = character.prompt + instructionKnowledgeText;
             if (Object.keys(imageManager.imageMap).length > 0) {
-                systemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ คุณจะมีนิสัยขอบเป็นห่วงและมักถามกลับเพื่อความแน่ใ0 ข้อความที่ตอบกลับจะถูกนำไปใช้กับ line chatbot โดยตรง';
+                preSystemPrompt += 'คุณจะตอบกลับเป็นข้อความปกติก ไม่เอา markdownใดๆ คุณจะมีนิสัยขอบเป็นห่วงและมักถามกลับเพื่อความแน่ใ0 ข้อความที่ตอบกลับจะถูกนำไปใช้กับ line chatbot โดยตรง';
             }
+            systemPrompt = preSystemPrompt;
+
+        } else{
+                systemPrompt = "คุณคือหลานเอง AI chat ที่ถูกสร้างมาเพื่อช่วยเหลือผู้สูงอายุที่ไม่คุ้นเคยกับเทคโนโลยี คุณจะ:ตอบคำถามด้วยภาษาที่เข้าใจง่าย เสมือนหลานแท้ๆ สอนการใช้แอพพลิเคชั่นและเทคโนโลยีอย่างละเอียดแบ่งคำอธิบายเป็นขั้นตอนที่ทำตามได้ง่ายใช้คำศัพท์ที่ผู้สูงอายุคุ้นเคpแทนตัวเองด้วยชื่อ 'หลานเอง' เสมอตอบกลับด้วยข้อความที่อ่านง่าย สวยงามคุณจะใช้ความอดทนและความเข้าใจในการสื่อสาร พร้อมทั้งให้กำลังใจผู้สูงอายุในการเรียนรู้สิ่งใหม่ๆ"
+        }
 
             const model = genAI.getGenerativeModel({
                 model: GEMINI_MODEL,
@@ -121,19 +125,23 @@ class AiController {
 
                 const recommendationModel = genAI.getGenerativeModel({
                     model: GEMINI_MODEL,
-                    systemInstruction:'คุณเป็นผู้ช่วยในการสนทนา หลังจากอ่านข้อความบทสนทนาที่ user ส่งมา กรุณาแนะนำ 5 ประโยคที่ user สามารถใช้ตอบกลับได้อย่างเหมาะสม เพื่อให้การสนทนาดำเนินต่อไปอย่างราบรื่นและน่าสนใจ คำนึงถึงบริบท อารมณ์ และจุดประสงค์ของการสนทนา นำเสนอประโยคที่หลากหลายและเป็นธรรมชาติ แยกแต่ละประโยคด้วยเครื่องหมายจุลภาค (,)'
+                    systemInstruction:'คุณมีหน้าที่แนะนำ 5 ประโยค ที่ต้อจากบทสนทนาของ system เพื่อคุยกับ user ต่อ แค่ 5 ประโยคสั้นๆเท่านั้นไม่มีอย่างอื่น  ที่ผู้สูงอายุสามารถเลือกตอบกลับได้ง่ายๆ เพื่อให้การสนทนาดำเนินต่อไปอย่างราบรื่น แยกแต่ละประโยคด้วยเครื่องหมายจุลภาค (,) ข้อความจะถูกไปเพิ่มในประโยคแนะนำของ line bot '
                 });
                 const recommendationChatSession = recommendationModel.startChat({ generationConfig: GENERATION_CONFIG, history: [] });
-                const previosMessage = `user : ${message} \n AI : ${response} `
-            const recommendationResult = await recommendationChatSession.sendMessage(previosMessage);
+                const previousMessage = `user : ${message} \n AI : ${response} `
+            const recommendationResult = await recommendationChatSession.sendMessage(previousMessage);
                 const recommendationResponse = recommendationResult.response.text();
                 
                 
 
             res.json({ classification, response, recommendationResponse});
         } catch (error) {
-            console.error('Error processing message:', error);
-            res.status(500).json({ error: 'An error occurred while processing the message' });
+            res.status(200).json({
+                classification: 'gemini',
+                response: 'ขออภัยค่ะ ข้อความของคุณมีเนื้อหาที่ระบบไม่สามารถประมวลผลได้ กรุณาปรับแก้และส่งใหม่อีกครั้งนะคะ',
+                recommendationResponse:''
+            });
+            // res.status(500).json({ error: 'An error occurred while processing the message' });
         }
     }
 
