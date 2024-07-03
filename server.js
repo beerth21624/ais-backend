@@ -3,6 +3,7 @@ const { storage } = require('./storage/storage');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const socketIOMiddleware = require('./middlewares/socketIOMiddleware');
+const { chatIoMiddleware } = require('./middlewares/agentChatMiddleware');
 const auth = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -16,11 +17,18 @@ const upload = multer({ storage });
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true
-});
+}).then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error(err));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const server = socketIOMiddleware(app);
+
+app.get('/', (req, res) => {
+    res.send('Hello World');
+}
+);
 
 
 //routes
