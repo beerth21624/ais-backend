@@ -184,7 +184,10 @@ class AiController {
         });
 
         const cleanedHistory = history
-          .sort((a, b) => a.timestamp - b.timestamp)
+          .sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+          )
           .map(({ from, message }) => ({
             role: from,
             parts: [{ text: message }],
