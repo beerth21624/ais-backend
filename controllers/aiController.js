@@ -140,7 +140,6 @@ class AiController {
         const cachedSystemPrompt = await redisClient.get(
           `systemPrompt:${character._id}`,
         );
-        console.log(character);
         if (false && cachedSystemPrompt) {
           systemPrompt = cachedSystemPrompt;
         } else {
@@ -180,7 +179,6 @@ class AiController {
       if (false && cachedResponse) {
         response = cachedResponse;
       } else {
-        console.log(systemPrompt);
         const model = genAI.getGenerativeModel({
           model: GEMINI_MODEL,
           systemInstruction: systemPrompt,
@@ -220,9 +218,6 @@ class AiController {
 
       res.json({ classification, response });
     } catch (error) {
-      if (error instanceof GoogleGenerativeAIError) {
-        cosole.log(error.name);
-      }
       res.status(200).json({
         classification: "gemini",
         response:
