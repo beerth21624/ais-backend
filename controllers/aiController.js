@@ -3,6 +3,7 @@ const natural = require("natural");
 const CharacterSchema = require("../schemas/characterSchema");
 const FolderSchema = require("../schemas/folderSchema");
 const redis = require("redis");
+const { GoogleGenerativeAIError } = require("@google/generative-ai");
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -139,7 +140,8 @@ class AiController {
         const cachedSystemPrompt = await redisClient.get(
           `systemPrompt:${character._id}`,
         );
-        if (cachedSystemPrompt) {
+        console.log(character);
+        if (false && cachedSystemPrompt) {
           systemPrompt = cachedSystemPrompt;
         } else {
           const folders = await FolderSchema.find({
@@ -175,9 +177,10 @@ class AiController {
       const cacheKey = `response:${classification}:${message}`;
       const cachedResponse = await redisClient.get(cacheKey);
       let response;
-      if (cachedResponse) {
+      if (false && cachedResponse) {
         response = cachedResponse;
       } else {
+        console.log(systemPrompt);
         const model = genAI.getGenerativeModel({
           model: GEMINI_MODEL,
           systemInstruction: systemPrompt,
@@ -217,6 +220,9 @@ class AiController {
 
       res.json({ classification, response });
     } catch (error) {
+      if (error instanceof GoogleGenerativeAIError) {
+        cosole.log(error.name);
+      }
       res.status(200).json({
         classification: "gemini",
         response:
@@ -229,7 +235,7 @@ class AiController {
   static async classifyMessage(message) {
     const characters = await CharacterSchema.find({ record_status: "A" });
     const classifierInstruction = `คุณเป็น AI ที่เชี่ยวชาญในการวิเคราะห์และจำแนกประเภทของข้อความ โดยเฉพาะอย่างยิ่งในการระบุว่าข้อความนั้นเกี่ยวข้องกับประเภทใดใน ${characters.length} ประเภทต่อไปนี้:
-${characters.map((char) => `${char.name}: ${char.prompt}`).join("\n")}
+${characters.map((char) => `${char.name}: ${char.description}`).join("\n")}
 เมื่อได้รับข้อความใดๆ คุณจะวิเคราะห์เนื้อหาและตอบกลับด้วยชื่อประเภทที่เหมาะสมที่สุดเพียงอย่างเดียว โดยไม่มีข้อความอื่นใดเพิ่มเติม ข้อควรระวัง: หากข้อความนั้นเกี่ยวข้องกับการแพทย์ที่มีความเสี่ยงและอันตราย ฉันจะไม่ให้คำแนะนำใด ๆ และจะไม่ตอบกลับข้อความนั้น ๆ`;
 
     const model = genAI.getGenerativeModel({
@@ -262,4 +268,3 @@ ${characters.map((char) => `${char.name}: ${char.prompt}`).join("\n")}
 }
 
 module.exports = AiController;
-
